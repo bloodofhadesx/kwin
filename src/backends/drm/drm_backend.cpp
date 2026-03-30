@@ -152,29 +152,8 @@ bool DrmBackend::initialize()
         }
     }
     updateOutputs();
-
-    if (m_explicitGpus.empty() && m_gpus.size() > 1) {
-        std::ranges::sort(m_gpus, [](const auto &gpu1, const auto &gpu2) {
-            const bool software1 = !gpu1->renderDevice() || gpu1->renderDevice()->eglDisplay()->isSoftwareRenderer();
-            const bool software2 = !gpu2->renderDevice() || gpu2->renderDevice()->eglDisplay()->isSoftwareRenderer();
-            if (software1 != software2) {
-                // avoid needing to do software rendering with the primary GPU
-                return !software1;
-            }
-            const size_t internalOutputs1 = std::ranges::count_if(gpu1->drmOutputs(), &BackendOutput::isInternal);
-            const size_t internalOutputs2 = std::ranges::count_if(gpu2->drmOutputs(), &BackendOutput::isInternal);
-            if (internalOutputs1 != internalOutputs2) {
-                return internalOutputs1 > internalOutputs2;
-            }
-            const size_t desktopOutputs1 = std::ranges::count_if(gpu1->drmOutputs(), std::not_fn(&BackendOutput::isNonDesktop));
-            const size_t desktopOutputs2 = std::ranges::count_if(gpu2->drmOutputs(), std::not_fn(&BackendOutput::isNonDesktop));
-            if (desktopOutputs1 != desktopOutputs2) {
-                return desktopOutputs1 > desktopOutputs2;
-            }
-            return gpu1->drmOutputs().size() > gpu2->drmOutputs().size();
-        });
-        qCDebug(KWIN_DRM) << "chose" << m_gpus.front()->drmDevice()->path() << "as the primary GPU";
-    }
+    sortGpus();
+    qCDebug(KWIN_DRM) << "chose" << m_gpus.front()->drmDevice()->path() << "as the primary GPU";
     return true;
 }
 
@@ -214,9 +193,19 @@ void DrmBackend::handleUdevEvent()
             DrmGpu *gpu = findGpu(device->devNum());
             if (gpu) {
                 if (primaryGpu() == gpu) {
-                    qCCritical(KWIN_DRM) << "Primary gpu has been removed! Quitting...";
-                    QCoreApplication::exit(1);
-                    return;
+                    qCCritical(KWIN_DRM, "Primary gpu %s has been removed!", qPrintable(gpu->drmDevice()->path()));
+                    if (m_gpus.size() == 1) {
+                        qCCritical(KWIN_DRM, "Quitting...");
+                        QCoreApplication::exit(-1);
+                        return;
+                    }
+                    gpu->setRemoved();
+                    Q_EMIT aboutToChangeEglDisplay();
+                    sortGpus();
+                    qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+                    Q_EMIT eglDisplayChanged();
+
+                    updateOutputs();
                 } else {
                     gpu->setRemoved();
                     updateOutputs(gpu);
@@ -232,6 +221,41 @@ void DrmBackend::handleUdevEvent()
                 updateOutputs(gpu);
             }
         }
+    }
+}
+
+void DrmBackend::sortGpus()
+{
+    if (m_explicitGpus.empty()) {
+        std::ranges::sort(m_gpus, [](const auto &gpu1, const auto &gpu2) {
+            const bool software1 = !gpu1->renderDevice() || gpu1->renderDevice()->eglDisplay()->isSoftwareRenderer();
+            const bool software2 = !gpu2->renderDevice() || gpu2->renderDevice()->eglDisplay()->isSoftwareRenderer();
+            if (software1 != software2) {
+                // avoid needing to do software rendering with the primary GPU
+                return !software1;
+            }
+            const size_t internalOutputs1 = std::ranges::count_if(gpu1->drmOutputs(), &BackendOutput::isInternal);
+            const size_t internalOutputs2 = std::ranges::count_if(gpu2->drmOutputs(), &BackendOutput::isInternal);
+            if (internalOutputs1 != internalOutputs2) {
+                return internalOutputs1 > internalOutputs2;
+            }
+            const size_t desktopOutputs1 = std::ranges::count_if(gpu1->drmOutputs(), std::not_fn(&BackendOutput::isNonDesktop));
+            const size_t desktopOutputs2 = std::ranges::count_if(gpu2->drmOutputs(), std::not_fn(&BackendOutput::isNonDesktop));
+            if (desktopOutputs1 != desktopOutputs2) {
+                return desktopOutputs1 > desktopOutputs2;
+            }
+            return gpu1->drmOutputs().size() > gpu2->drmOutputs().size();
+        });
+    } else {
+        std::ranges::sort(m_gpus, [this](const auto &gpu1, const auto &gpu2) {
+            if (gpu1->isRemoved() != gpu2->isRemoved()) {
+                // avoid removed GPUs as the primary one
+                return !gpu1->isRemoved();
+            }
+            const auto index1 = m_explicitGpus.indexOf(gpu1->drmDevice()->path());
+            const auto index2 = m_explicitGpus.indexOf(gpu2->drmDevice()->path());
+            return index1 < index2;
+        });
     }
 }
 
@@ -269,6 +293,21 @@ DrmGpu *DrmBackend::addGpu(const QString &fileName)
     qCDebug(KWIN_DRM, "adding GPU %s", qPrintable(fileName));
     connect(gpu, &DrmGpu::outputAdded, this, &DrmBackend::addOutput);
     connect(gpu, &DrmGpu::outputRemoved, this, &DrmBackend::removeOutput);
+    connect(gpu, &DrmGpu::renderDeviceChanged, this, [this, gpu]() {
+        if (primaryGpu() != gpu) {
+            return;
+        }
+        qCCritical(KWIN_DRM, "Render device of primary GPU %s has changed", qPrintable(gpu->drmDevice()->path()));
+        if (!gpu->renderDevice()) {
+            // The udev event for the KMS node should be received later,
+            // but the device is already unusable.
+            gpu->setRemoved();
+        }
+        Q_EMIT aboutToChangeEglDisplay();
+        sortGpus();
+        qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+        Q_EMIT eglDisplayChanged();
+    });
     if (m_renderBackend) {
         gpu->createLayers();
     }
