@@ -84,6 +84,9 @@ Q_SIGNALS:
      */
     void outputRemoved(BackendOutput *output);
 
+    void aboutToChangeEglDisplay();
+    void eglDisplayChanged();
+
 protected:
     explicit OutputBackend(QObject *parent = nullptr);
 
