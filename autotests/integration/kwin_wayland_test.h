@@ -1530,6 +1530,7 @@ class SimpleKeyboard : public QObject
 public:
     explicit SimpleKeyboard(QObject *parent = nullptr);
     KWayland::Client::Keyboard *keyboard();
+    void clearReceivedText();
     QString receviedText();
 Q_SIGNALS:
     void receviedTextChanged();
