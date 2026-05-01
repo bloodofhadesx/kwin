@@ -11,6 +11,7 @@
 #include "compositor.h"
 #include "core/drm_formats.h"
 #include "core/drmdevice.h"
+#include "core/gpumanager.h"
 #include "core/graphicsbuffer.h"
 #include "core/outputbackend.h"
 #include "core/renderdevice.h"
@@ -160,17 +161,17 @@ void EglBackend::initWayland()
     };
 
     m_tranches.append({
-        .device = m_renderDevice->eglDisplay()->renderDevNode().value_or(scanoutDevice->deviceId()),
+        .device = m_renderDevice->drmDevice()->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = filterFormats(10, false),
     });
     m_tranches.append({
-        .device = m_renderDevice->eglDisplay()->renderDevNode().value_or(scanoutDevice->deviceId()),
+        .device = m_renderDevice->drmDevice()->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = filterFormats(8, false),
     });
     m_tranches.append({
-        .device = m_renderDevice->eglDisplay()->renderDevNode().value_or(scanoutDevice->deviceId()),
+        .device = m_renderDevice->drmDevice()->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = includeShaderConversions(filterFormats(std::nullopt, true)),
     });
@@ -248,6 +249,11 @@ std::shared_ptr<GLTexture> EglBackend::importDmaBufAsTexture(const DmaBufAttribu
 
 bool EglBackend::testImportBuffer(GraphicsBuffer *buffer)
 {
+    RenderDevice *compat = GpuManager::self()->compatibleRenderDevice(buffer->dmabufAttributes()->device);
+    if (compat != m_renderDevice) {
+        // TODO import the buffer into the correct device instead
+        return false;
+    }
     const auto nonExternalOnly = m_renderDevice->eglDisplay()->nonExternalOnlySupportedDrmFormats();
     if (auto it = nonExternalOnly.find(buffer->dmabufAttributes()->format); it != nonExternalOnly.end() && it->contains(buffer->dmabufAttributes()->modifier)) {
         return importBufferAsImage(buffer) != EGL_NO_IMAGE_KHR;
