@@ -170,9 +170,22 @@ void ApplicationWayland::performStartup()
         m_xwayland->xwaylandLauncher()->addEnvironmentVariables(m_xwaylandExtraEnvironment);
         m_xwayland->xwaylandLauncher()->passFileDescriptors(std::move(m_xwaylandFds));
         m_xwayland->init();
+        connect(m_xwayland.get(), &Xwl::Xwayland::started, this, &ApplicationWayland::applyXwaylandScale);
+        connect(outputBackend(), &OutputBackend::eglDisplayChanged, this, [this]() {
+            // the timer is there to avoid starting Xwayland while the dmabuf feedback
+            // still points to the old GPU, which can make startup fail
+            QTimer::singleShot(0, this, &ApplicationWayland::restartXwayland);
+        });
     }
 #endif
     startSession();
+}
+
+void ApplicationWayland::restartXwayland()
+{
+    // Xwayland will automatically be started again
+    // once a client tries to connect to it
+    m_xwayland->xwaylandLauncher()->stop();
 }
 
 void ApplicationWayland::refreshSettings(const KConfigGroup &group, const QByteArrayList &names)
