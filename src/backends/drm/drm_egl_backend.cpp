@@ -8,6 +8,7 @@
 */
 #include "drm_egl_backend.h"
 // kwin
+#include "core/gpumanager.h"
 #include "core/renderdevice.h"
 #include "core/syncobjtimeline.h"
 #include "drm_abstract_output.h"
@@ -45,7 +46,13 @@ bool EglGbmBackend::initializeEgl()
     if (!initClientExtensions()) {
         return false;
     }
-    setRenderDevice(m_backend->primaryGpu()->renderDevice());
+    if (m_backend->primaryGpu()) {
+        setRenderDevice(m_backend->primaryGpu()->renderDevice());
+    } else if (GpuManager::self()->softwareDevice()) {
+        setRenderDevice(&*GpuManager::self()->softwareDevice());
+    } else {
+        return false;
+    }
     return true;
 }
 

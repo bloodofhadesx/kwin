@@ -7,7 +7,6 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "virtual_egl_backend.h"
-#include "core/drmdevice.h"
 #include "core/gbmgraphicsbufferallocator.h"
 #include "core/renderdevice.h"
 #include "opengl/eglswapchain.h"

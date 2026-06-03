@@ -126,7 +126,7 @@ bool WaylandEglLayer::importScanoutBuffer(GraphicsBuffer *buffer, const std::sha
 std::optional<DrmDevice &> WaylandEglLayer::scanoutDevice() const
 {
     // TODO implement dmabuf feedback and report this more correctly
-    return *m_backend->renderDevice()->drmDevice();
+    return m_backend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap WaylandEglLayer::supportedDrmFormats() const

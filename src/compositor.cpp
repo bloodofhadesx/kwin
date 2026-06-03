@@ -132,7 +132,10 @@ static QVariantHash collectCrashInformation(const EglBackend *backend)
     QVariantHash gpuInformation;
     gpuInformation[QStringLiteral("api_type")] = QStringLiteral("OpenGL");
     gpuInformation[QStringLiteral("name")] = QString::fromUtf8(glPlatform->glRendererString());
-    if (const auto pciInfo = backend->renderDevice()->drmDevice()->pciDeviceInfo()) {
+    const auto pciInfo = backend->renderDevice()->drmDevice().transform([](DrmDevice &device) {
+        return device.pciDeviceInfo();
+    }).value_or(std::nullopt);
+    if (pciInfo) {
         gpuInformation[QStringLiteral("id")] = QString::number(pciInfo->device_id, 16);
         gpuInformation[QStringLiteral("vendor_id")] = QString::number(pciInfo->vendor_id, 16);
     }

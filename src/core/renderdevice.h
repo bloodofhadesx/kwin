@@ -25,6 +25,7 @@ class EglContext;
 class GraphicsBuffer;
 class VulkanDevice;
 class GraphicsBufferAllocator;
+class UDmabufAllocator;
 
 class KWIN_EXPORT RenderDevice : public QObject
 {
@@ -32,11 +33,12 @@ class KWIN_EXPORT RenderDevice : public QObject
 
 public:
     explicit RenderDevice(std::unique_ptr<DrmDevice> &&device, std::unique_ptr<EglDisplay> &&display);
+    explicit RenderDevice(std::unique_ptr<UDmabufAllocator> &&allocator, std::unique_ptr<EglDisplay> &&display);
     ~RenderDevice();
 
     /**
      * the underlying drm device that can be used to allocate buffers for this render device
-     * This doesn't necessarily represent a render node!
+     * This doesn't necessarily represent a render node, and may not be present at all!
      */
     std::optional<DrmDevice &> drmDevice() const;
     GraphicsBufferAllocator *allocator() const;
@@ -72,12 +74,18 @@ public:
     bool isSoftwareDevice() const;
 
     static std::unique_ptr<RenderDevice> open(const QString &path, int authenticatedFd = -1);
+    /**
+     * @returns a RenderDevice without a drm device, using udmabuf for allocations
+     *          and a software renderer for OpenGL and Vulkan
+     */
+    static std::unique_ptr<RenderDevice> createSoftwareDevice();
 
 private:
     void handleVulkanDeviceLoss();
     void createVulkanDevice();
 
     const std::unique_ptr<DrmDevice> m_device;
+    const std::unique_ptr<UDmabufAllocator> m_udmabufAllocator;
     const std::unique_ptr<EglDisplay> m_display;
     const vk::raii::Context m_vulkanContext;
     const vk::raii::Instance m_vulkanInstance;

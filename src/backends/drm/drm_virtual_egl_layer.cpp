@@ -152,7 +152,7 @@ void VirtualEglGbmLayer::releaseBuffers()
 
 std::optional<DrmDevice &> VirtualEglGbmLayer::scanoutDevice() const
 {
-    return *m_eglBackend->renderDevice()->drmDevice();
+    return m_eglBackend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap VirtualEglGbmLayer::supportedDrmFormats() const
