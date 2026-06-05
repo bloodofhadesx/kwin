@@ -70,11 +70,6 @@ bool WaylandQPainterPrimaryLayer::doEndFrame(const Region &renderedDeviceRegion,
     return true;
 }
 
-std::optional<DrmDevice &> WaylandQPainterPrimaryLayer::scanoutDevice() const
-{
-    return std::nullopt;
-}
-
 FormatModifierMap WaylandQPainterPrimaryLayer::supportedDrmFormats() const
 {
     return {{DRM_FORMAT_ARGB8888, {DRM_FORMAT_MOD_LINEAR}}};
@@ -127,11 +122,6 @@ bool WaylandQPainterCursorLayer::doEndFrame(const Region &renderedDeviceRegion, 
     static_cast<WaylandOutput *>(m_output.get())->cursor()->update(buffer, m_back->buffer()->size() / m_output->scale(), hotspot().toPoint());
     m_swapchain->release(m_back);
     return true;
-}
-
-std::optional<DrmDevice &> WaylandQPainterCursorLayer::scanoutDevice() const
-{
-    return std::nullopt;
 }
 
 FormatModifierMap WaylandQPainterCursorLayer::supportedDrmFormats() const

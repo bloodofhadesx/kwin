@@ -77,11 +77,6 @@ bool X11WindowedEglPrimaryLayer::doEndFrame(const Region &renderedDeviceRegion, 
     return true;
 }
 
-std::optional<DrmDevice &> X11WindowedEglPrimaryLayer::scanoutDevice() const
-{
-    return *m_backend->renderDevice()->drmDevice();
-}
-
 FormatModifierMap X11WindowedEglPrimaryLayer::supportedDrmFormats() const
 {
     return m_backend->backend()->driFormats();
@@ -146,11 +141,6 @@ bool X11WindowedEglCursorLayer::doEndFrame(const Region &renderedDeviceRegion, c
     }
 
     return true;
-}
-
-std::optional<DrmDevice &> X11WindowedEglCursorLayer::scanoutDevice() const
-{
-    return *m_backend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap X11WindowedEglCursorLayer::supportedDrmFormats() const

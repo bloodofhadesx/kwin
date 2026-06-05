@@ -14,11 +14,6 @@ ColorPickerLayer::ColorPickerLayer(BackendOutput *output, GLFramebuffer *buffer)
 {
 }
 
-std::optional<DrmDevice &> ColorPickerLayer::scanoutDevice() const
-{
-    return std::nullopt;
-}
-
 FormatModifierMap ColorPickerLayer::supportedDrmFormats() const
 {
     return {};

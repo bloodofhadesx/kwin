@@ -128,11 +128,6 @@ void DrmVirtualQPainterLayer::releaseBuffers()
 {
 }
 
-std::optional<DrmDevice &> DrmVirtualQPainterLayer::scanoutDevice() const
-{
-    return std::nullopt;
-}
-
 FormatModifierMap DrmVirtualQPainterLayer::supportedDrmFormats() const
 {
     return {{DRM_FORMAT_ARGB8888, ModifierList{DRM_FORMAT_MOD_LINEAR}}};

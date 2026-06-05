@@ -63,11 +63,6 @@ bool X11WindowedQPainterPrimaryLayer::doEndFrame(const Region &renderedDeviceReg
     return true;
 }
 
-std::optional<DrmDevice &> X11WindowedQPainterPrimaryLayer::scanoutDevice() const
-{
-    return std::nullopt;
-}
-
 FormatModifierMap X11WindowedQPainterPrimaryLayer::supportedDrmFormats() const
 {
     return m_backend->supportedFormats();
@@ -107,11 +102,6 @@ bool X11WindowedQPainterCursorLayer::doEndFrame(const Region &renderedDeviceRegi
     }
     m_output->cursor()->update(m_buffer, hotspot());
     return true;
-}
-
-std::optional<DrmDevice &> X11WindowedQPainterCursorLayer::scanoutDevice() const
-{
-    return std::nullopt;
 }
 
 FormatModifierMap X11WindowedQPainterCursorLayer::supportedDrmFormats() const

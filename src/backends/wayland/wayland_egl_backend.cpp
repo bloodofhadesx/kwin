@@ -209,11 +209,6 @@ bool WaylandEglCursorLayer::doEndFrame(const Region &renderedDeviceRegion, const
     return true;
 }
 
-std::optional<DrmDevice &> WaylandEglCursorLayer::scanoutDevice() const
-{
-    return *m_backend->renderDevice()->drmDevice();
-}
-
 FormatModifierMap WaylandEglCursorLayer::supportedDrmFormats() const
 {
     return m_backend->supportedFormats();
