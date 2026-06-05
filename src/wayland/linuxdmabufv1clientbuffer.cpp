@@ -84,6 +84,11 @@ void LinuxDmaBufV1ClientBufferIntegrationPrivate::zwp_linux_dmabuf_v1_get_surfac
     LinuxDmaBufV1FeedbackPrivate::get(surfacePrivate->dmabufFeedbackV1.get())->add(resource->client(), id, resource->version());
 }
 
+void LinuxDmaBufV1ClientBufferIntegrationPrivate::zwp_linux_dmabuf_v1_destroy_global()
+{
+    delete q;
+}
+
 void LinuxDmaBufV1ClientBufferIntegrationPrivate::zwp_linux_dmabuf_v1_destroy(Resource *resource)
 {
     wl_resource_destroy(resource->handle);
@@ -318,6 +323,11 @@ LinuxDmaBufV1ClientBufferIntegration::~LinuxDmaBufV1ClientBufferIntegration()
 {
 }
 
+void LinuxDmaBufV1ClientBufferIntegration::remove()
+{
+    d->globalRemove();
+}
+
 bool operator==(const LinuxDmaBufV1Feedback::Tranche &t1, const LinuxDmaBufV1Feedback::Tranche &t2)
 {
     return t1.device == t2.device && t1.flags == t2.flags && t1.formatTable == t2.formatTable;
@@ -456,7 +466,7 @@ QList<LinuxDmaBufV1Feedback::Tranche> LinuxDmaBufV1Feedback::createScanoutTranch
         if (tranche.device != mainDevice) {
             continue;
         }
-        if (compatibleWithScanout && tranche.device != compatibleWithScanout->drmDevice()->deviceId()) {
+        if (compatibleWithScanout && compatibleWithScanout->drmDevice() && tranche.device != compatibleWithScanout->drmDevice()->deviceId()) {
             // limit scanout tranches to devices we can also sample from
             continue;
         }

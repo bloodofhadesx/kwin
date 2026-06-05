@@ -103,7 +103,9 @@ void EglBackend::setRenderDevice(RenderDevice *device)
 
 void EglBackend::initWayland()
 {
-    if (!WaylandServer::self()) {
+    if (!m_renderDevice->drmDevice()) {
+        m_tranches.clear();
+        waylandServer()->setRenderBackend(this, m_tranches);
         return;
     }
 
@@ -173,11 +175,7 @@ void EglBackend::initWayland()
         .formatTable = includeShaderConversions(filterFormats(std::nullopt, true)),
     });
 
-    LinuxDmaBufV1ClientBufferIntegration *dmabuf = waylandServer()->linuxDmabuf();
-    dmabuf->setRenderBackend(this);
-    dmabuf->setSupportedFormatsWithModifiers(m_tranches);
-
-    waylandServer()->setRenderBackend(this);
+    waylandServer()->setRenderBackend(this, m_tranches);
 }
 
 bool EglBackend::initClientExtensions()

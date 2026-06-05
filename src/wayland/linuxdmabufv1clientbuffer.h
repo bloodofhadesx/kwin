@@ -73,6 +73,8 @@ public:
     explicit LinuxDmaBufV1ClientBufferIntegration(Display *display);
     ~LinuxDmaBufV1ClientBufferIntegration() override;
 
+    void remove();
+
     RenderBackend *renderBackend() const;
     void setRenderBackend(RenderBackend *renderBackend);
 

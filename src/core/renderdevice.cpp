@@ -82,6 +82,7 @@ RenderDevice::RenderDevice(std::unique_ptr<DrmDevice> &&device, std::unique_ptr<
     : m_device(std::move(device))
     , m_display(std::move(display))
     , m_vulkanInstance(createVulkanInstance(m_vulkanContext))
+    , m_path(m_device->path())
 {
     createVulkanDevice();
     m_allImportableFormats = getImportFormats(m_display.get(), m_vulkanDevice.get());
@@ -91,9 +92,18 @@ RenderDevice::~RenderDevice()
 {
 }
 
-DrmDevice *RenderDevice::drmDevice() const
+std::optional<DrmDevice &> RenderDevice::drmDevice() const
 {
-    return m_device.get();
+    if (m_device) {
+        return *m_device;
+    } else {
+        return std::nullopt;
+    }
+}
+
+QString RenderDevice::path() const
+{
+    return m_path;
 }
 
 GraphicsBufferAllocator *RenderDevice::allocator() const
@@ -138,7 +148,7 @@ static constexpr std::array s_requiredVulkanExtensions = {
     VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME,
 };
 
-static std::unique_ptr<VulkanDevice> openVulkanDevice(const vk::raii::Instance &instance, DrmDevice *drm)
+static std::unique_ptr<VulkanDevice> openVulkanDevice(const vk::raii::Instance &instance, DrmDevice *drm, const QString &path)
 {
     const auto [enumerateResult, physicalDevices] = instance.enumeratePhysicalDevices();
     if (enumerateResult != vk::Result::eSuccess) {
@@ -146,7 +156,7 @@ static std::unique_ptr<VulkanDevice> openVulkanDevice(const vk::raii::Instance &
         return nullptr;
     }
     // with faux devices like vkms and vgem, we can only do software rendering
-    const bool needsSoftwareDevice = drm->busType() == DRM_BUS_FAUX;
+    const bool needsSoftwareDevice = !drm || drm->busType() == DRM_BUS_FAUX;
     for (const vk::raii::PhysicalDevice &physicalDevice : physicalDevices) {
         const auto basicProperties = physicalDevice.getProperties2();
         const bool isSoftwareDevice = basicProperties.properties.deviceType == vk::PhysicalDeviceType::eCpu;
@@ -250,10 +260,10 @@ static std::unique_ptr<VulkanDevice> openVulkanDevice(const vk::raii::Instance &
         if (ret->supportedFormats().isEmpty()) {
             continue;
         }
-        qCDebug(KWIN_VULKAN, "Found Vulkan device %s for %s", deviceName, qPrintable(drm->path()));
+        qCDebug(KWIN_VULKAN, "Found Vulkan device %s for %s", deviceName, qPrintable(path));
         return ret;
     }
-    qCDebug(KWIN_VULKAN, "No Vulkan device found for %s", qPrintable(drm->path()));
+    qCDebug(KWIN_VULKAN, "No Vulkan device found for %s", qPrintable(path));
     return nullptr;
 }
 
@@ -273,7 +283,7 @@ void RenderDevice::createVulkanDevice()
     if (!*m_vulkanInstance) {
         return;
     }
-    m_vulkanDevice = openVulkanDevice(m_vulkanInstance, m_device.get());
+    m_vulkanDevice = openVulkanDevice(m_vulkanInstance, m_device.get(), m_path);
     if (m_vulkanDevice) {
         connect(m_vulkanDevice.get(), &VulkanDevice::deviceLost, this, &RenderDevice::handleVulkanDeviceLoss);
     }

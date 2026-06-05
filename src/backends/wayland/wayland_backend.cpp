@@ -673,9 +673,9 @@ wl_buffer *WaylandBackend::importBuffer(GraphicsBuffer *graphicsBuffer)
     return buffer->handle();
 }
 
-DrmDevice *WaylandBackend::drmDevice() const
+std::optional<DrmDevice &> WaylandBackend::drmDevice() const
 {
-    return m_renderDevice ? m_renderDevice->drmDevice() : nullptr;
+    return m_renderDevice ? m_renderDevice->drmDevice() : std::nullopt;
 }
 
 RenderDevice *WaylandBackend::renderDevice() const

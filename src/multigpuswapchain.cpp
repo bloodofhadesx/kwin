@@ -96,7 +96,7 @@ std::unique_ptr<MultiGpuSwapchain> MultiGpuSwapchain::create(RenderDevice *copyD
         if (!formatMod) {
             return nullptr;
         }
-        auto eglSwapchain = EglSwapchain::create(copyDevice->drmDevice()->allocator(), context.get(), size, formatMod->format, formatMod->modifiers, scanout);
+        auto eglSwapchain = EglSwapchain::create(copyDevice->allocator(), context.get(), size, formatMod->format, formatMod->modifiers, scanout);
         if (eglSwapchain) {
             return std::make_unique<MultiGpuSwapchain>(copyDevice, targetDevice, context, std::move(eglSwapchain));
         }
@@ -360,7 +360,7 @@ std::optional<MultiGpuSwapchain::Ret> MultiGpuSwapchain::copyWithEGL(GraphicsBuf
 
 void MultiGpuSwapchain::handleDeviceRemoved(RenderDevice *device)
 {
-    if (m_copyDevice == device || m_targetDevice == device->drmDevice()) {
+    if (m_copyDevice == device || (device->drmDevice() && m_targetDevice == &*device->drmDevice())) {
         deleteResources();
     }
 }

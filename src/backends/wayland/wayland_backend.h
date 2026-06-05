@@ -245,7 +245,7 @@ public:
 
     wl_buffer *importBuffer(GraphicsBuffer *graphicsBuffer);
 
-    DrmDevice *drmDevice() const;
+    std::optional<DrmDevice &> drmDevice() const;
 
     void setEglBackend(WaylandEglBackend *eglBackend)
     {
