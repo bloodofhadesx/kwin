@@ -23,9 +23,9 @@ void ScreencastLayer::setFramebuffer(GLFramebuffer *buffer, const Region &buffer
     m_bufferDamage = bufferDamage;
 }
 
-DrmDevice *ScreencastLayer::scanoutDevice() const
+std::optional<DrmDevice &> ScreencastLayer::scanoutDevice() const
 {
-    return nullptr;
+    return std::nullopt;
 }
 
 FormatModifierMap ScreencastLayer::supportedDrmFormats() const

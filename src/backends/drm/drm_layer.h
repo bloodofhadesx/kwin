@@ -37,7 +37,7 @@ public:
     explicit DrmPipelineLayer(DrmPlane *plane);
     explicit DrmPipelineLayer(DrmPlane::TypeIndex type);
 
-    DrmDevice *scanoutDevice() const override;
+    std::optional<DrmDevice &> scanoutDevice() const override;
     FormatModifierMap supportedDrmFormats() const override;
     QList<QSize> recommendedSizes() const override;
     FormatModifierMap supportedAsyncDrmFormats() const override;

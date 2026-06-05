@@ -8,6 +8,7 @@
 */
 #include "x11_windowed_egl_backend.h"
 #include "core/gbmgraphicsbufferallocator.h"
+#include "core/renderdevice.h"
 #include "opengl/eglnativefence.h"
 #include "opengl/eglswapchain.h"
 #include "opengl/glrendertimequery.h"
@@ -76,9 +77,9 @@ bool X11WindowedEglPrimaryLayer::doEndFrame(const Region &renderedDeviceRegion, 
     return true;
 }
 
-DrmDevice *X11WindowedEglPrimaryLayer::scanoutDevice() const
+std::optional<DrmDevice &> X11WindowedEglPrimaryLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return *m_backend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap X11WindowedEglPrimaryLayer::supportedDrmFormats() const
@@ -147,9 +148,9 @@ bool X11WindowedEglCursorLayer::doEndFrame(const Region &renderedDeviceRegion, c
     return true;
 }
 
-DrmDevice *X11WindowedEglCursorLayer::scanoutDevice() const
+std::optional<DrmDevice &> X11WindowedEglCursorLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return *m_backend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap X11WindowedEglCursorLayer::supportedDrmFormats() const

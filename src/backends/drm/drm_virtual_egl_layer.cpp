@@ -7,6 +7,7 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "drm_virtual_egl_layer.h"
+#include "core/renderdevice.h"
 #include "drm_egl_backend.h"
 #include "drm_gpu.h"
 #include "drm_logging.h"
@@ -149,9 +150,9 @@ void VirtualEglGbmLayer::releaseBuffers()
     m_scanoutBuffer.reset();
 }
 
-DrmDevice *VirtualEglGbmLayer::scanoutDevice() const
+std::optional<DrmDevice &> VirtualEglGbmLayer::scanoutDevice() const
 {
-    return m_eglBackend->drmDevice();
+    return *m_eglBackend->renderDevice()->drmDevice();
 }
 
 FormatModifierMap VirtualEglGbmLayer::supportedDrmFormats() const

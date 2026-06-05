@@ -71,9 +71,9 @@ bool VirtualEglLayer::doEndFrame(const Region &renderedDeviceRegion, const Regio
     return true;
 }
 
-DrmDevice *VirtualEglLayer::scanoutDevice() const
+std::optional<DrmDevice &> VirtualEglLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return std::nullopt;
 }
 
 FormatModifierMap VirtualEglLayer::supportedDrmFormats() const

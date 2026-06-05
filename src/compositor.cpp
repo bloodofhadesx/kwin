@@ -378,7 +378,7 @@ static bool prepareDirectScanout(RenderView *view, LogicalOutput *logicalOutput,
     const auto formats = tearing ? layer->supportedAsyncDrmFormats() : layer->supportedDrmFormats();
     if (auto it = formats.find(attrs->format); it == formats.end() || !it->contains(attrs->modifier)) {
         layer->setScanoutCandidate(candidate);
-        candidate->setScanoutHint(layer->scanoutDevice(), formats);
+        candidate->setScanoutHint(&*layer->scanoutDevice(), formats);
         return false;
     }
     layer->setTargetRect(mapItemToOutputDeviceCoordinates(candidate, view, logicalOutput, backendOutput));

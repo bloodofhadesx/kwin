@@ -16,7 +16,7 @@ class ColorPickerLayer : public OutputLayer
 public:
     explicit ColorPickerLayer(BackendOutput *output, GLFramebuffer *buffer);
 
-    DrmDevice *scanoutDevice() const override;
+    std::optional<DrmDevice &> scanoutDevice() const override;
     FormatModifierMap supportedDrmFormats() const override;
     void releaseBuffers() override;
 

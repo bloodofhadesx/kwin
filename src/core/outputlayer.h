@@ -107,7 +107,7 @@ public:
 
     void setScanoutCandidate(SurfaceItem *item);
 
-    virtual DrmDevice *scanoutDevice() const = 0;
+    virtual std::optional<DrmDevice &> scanoutDevice() const = 0;
     virtual FormatModifierMap supportedDrmFormats() const = 0;
     virtual FormatModifierMap supportedAsyncDrmFormats() const;
 

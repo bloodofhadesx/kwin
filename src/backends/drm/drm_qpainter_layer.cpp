@@ -128,10 +128,9 @@ void DrmVirtualQPainterLayer::releaseBuffers()
 {
 }
 
-DrmDevice *DrmVirtualQPainterLayer::scanoutDevice() const
+std::optional<DrmDevice &> DrmVirtualQPainterLayer::scanoutDevice() const
 {
-    // TODO make this use GraphicsBuffers too?
-    return nullptr;
+    return std::nullopt;
 }
 
 FormatModifierMap DrmVirtualQPainterLayer::supportedDrmFormats() const

@@ -70,9 +70,9 @@ bool WaylandQPainterPrimaryLayer::doEndFrame(const Region &renderedDeviceRegion,
     return true;
 }
 
-DrmDevice *WaylandQPainterPrimaryLayer::scanoutDevice() const
+std::optional<DrmDevice &> WaylandQPainterPrimaryLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return std::nullopt;
 }
 
 FormatModifierMap WaylandQPainterPrimaryLayer::supportedDrmFormats() const
@@ -129,9 +129,9 @@ bool WaylandQPainterCursorLayer::doEndFrame(const Region &renderedDeviceRegion, 
     return true;
 }
 
-DrmDevice *WaylandQPainterCursorLayer::scanoutDevice() const
+std::optional<DrmDevice &> WaylandQPainterCursorLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return std::nullopt;
 }
 
 FormatModifierMap WaylandQPainterCursorLayer::supportedDrmFormats() const

@@ -61,9 +61,9 @@ QImage *VirtualQPainterLayer::image()
     return m_current->view()->image();
 }
 
-DrmDevice *VirtualQPainterLayer::scanoutDevice() const
+std::optional<DrmDevice &> VirtualQPainterLayer::scanoutDevice() const
 {
-    return m_backend->drmDevice();
+    return std::nullopt;
 }
 
 FormatModifierMap VirtualQPainterLayer::supportedDrmFormats() const
