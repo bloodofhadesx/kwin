@@ -17,7 +17,6 @@ namespace KWin
 
 class VirtualBackend;
 class VirtualOutput;
-class DrmDevice;
 class RenderDevice;
 
 class KWIN_EXPORT VirtualBackend : public OutputBackend
@@ -57,8 +56,6 @@ public:
     QList<CompositingType> supportedCompositors() const override;
 
     RenderDevice *renderDevice() const;
-
-    DrmDevice *drmDevice() const;
 
 Q_SIGNALS:
     void virtualOutputsSet(bool countChanged);

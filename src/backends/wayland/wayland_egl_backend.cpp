@@ -74,7 +74,7 @@ std::optional<OutputLayerBeginFrameInfo> WaylandEglLayer::doBeginFrame()
             if (it == formatTable.constEnd()) {
                 continue;
             }
-            m_swapchain = EglSwapchain::create(m_backend->drmDevice()->allocator(), m_backend->openglContext(), nativeSize, it.key(), it.value(), false);
+            m_swapchain = EglSwapchain::create(m_backend->renderDevice()->allocator(), m_backend->openglContext(), nativeSize, it.key(), it.value(), false);
             if (m_swapchain) {
                 break;
             }
@@ -167,7 +167,7 @@ std::optional<OutputLayerBeginFrameInfo> WaylandEglCursorLayer::doBeginFrame()
             if (it == formatTable.constEnd()) {
                 continue;
             }
-            m_swapchain = EglSwapchain::create(m_backend->drmDevice()->allocator(), m_backend->openglContext(), bufferSize, it.key(), it.value(), false);
+            m_swapchain = EglSwapchain::create(m_backend->renderDevice()->allocator(), m_backend->openglContext(), bufferSize, it.key(), it.value(), false);
             if (m_swapchain) {
                 break;
             }
@@ -240,11 +240,6 @@ WaylandEglBackend::~WaylandEglBackend()
 WaylandBackend *WaylandEglBackend::backend() const
 {
     return m_backend;
-}
-
-DrmDevice *WaylandEglBackend::drmDevice() const
-{
-    return m_backend->drmDevice();
 }
 
 void WaylandEglBackend::createOutputLayers(BackendOutput *output)

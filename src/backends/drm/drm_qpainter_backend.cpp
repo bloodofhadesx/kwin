@@ -33,11 +33,6 @@ DrmQPainterBackend::~DrmQPainterBackend()
     m_backend->setRenderBackend(nullptr);
 }
 
-DrmDevice *DrmQPainterBackend::drmDevice() const
-{
-    return m_backend->primaryGpu()->drmDevice();
-}
-
 QList<OutputLayer *> DrmQPainterBackend::compatibleOutputLayers(BackendOutput *output)
 {
     if (auto virtualOutput = qobject_cast<DrmVirtualOutput *>(output)) {

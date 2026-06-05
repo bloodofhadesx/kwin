@@ -65,11 +65,6 @@ bool EglGbmBackend::init()
     return true;
 }
 
-DrmDevice *EglGbmBackend::drmDevice() const
-{
-    return gpu()->drmDevice();
-}
-
 QList<OutputLayer *> EglGbmBackend::compatibleOutputLayers(BackendOutput *output)
 {
     if (auto virtualOutput = qobject_cast<DrmVirtualOutput *>(output)) {

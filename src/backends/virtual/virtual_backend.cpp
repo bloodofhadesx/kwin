@@ -54,11 +54,6 @@ QList<CompositingType> VirtualBackend::supportedCompositors() const
     return compositingTypes;
 }
 
-DrmDevice *VirtualBackend::drmDevice() const
-{
-    return m_renderDevice ? m_renderDevice->drmDevice() : nullptr;
-}
-
 std::unique_ptr<QPainterBackend> VirtualBackend::createQPainterBackend()
 {
     return std::make_unique<VirtualQPainterBackend>(this);
