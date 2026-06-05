@@ -136,11 +136,6 @@ bool DrmBackend::initialize()
         }
     }
 
-    if (m_gpus.empty()) {
-        qCWarning(KWIN_DRM) << "No suitable DRM devices have been found";
-        return false;
-    }
-
     // setup udevMonitor
     if (m_udevMonitor) {
         m_udevMonitor->filterSubsystemDevType("drm");
@@ -153,7 +148,11 @@ bool DrmBackend::initialize()
     }
     updateOutputs();
     sortGpus();
-    qCDebug(KWIN_DRM) << "chose" << m_gpus.front()->drmDevice()->path() << "as the primary GPU";
+    if (!m_gpus.empty()) {
+        qCDebug(KWIN_DRM) << "chose" << m_gpus.front()->drmDevice()->path() << "as the primary GPU";
+    } else {
+        qCWarning(KWIN_DRM, "Started without drm nodes!");
+    }
     return true;
 }
 
@@ -186,7 +185,15 @@ void DrmBackend::handleUdevEvent()
                 qCWarning(KWIN_DRM) << "Received unexpected add udev event for:" << device->devNode();
                 continue;
             }
+            const bool hadPrimaryGpu = !m_gpus.empty();
             if (DrmGpu *gpu = addGpu(device->devNode())) {
+                if (!hadPrimaryGpu) {
+                    Q_EMIT aboutToChangeEglDisplay();
+                    sortGpus();
+                    qCWarning(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+                    Q_EMIT eglDisplayChanged();
+                }
+
                 updateOutputs(gpu);
             }
         } else if (device->action() == QLatin1StringView("remove")) {
@@ -202,7 +209,11 @@ void DrmBackend::handleUdevEvent()
                     gpu->setRemoved();
                     Q_EMIT aboutToChangeEglDisplay();
                     sortGpus();
-                    qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+                    if (primaryGpu()) {
+                        qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+                    } else {
+                        qCCritical(KWIN_DRM, "All GPUs have been removed!");
+                    }
                     Q_EMIT eglDisplayChanged();
 
                     updateOutputs();
@@ -305,7 +316,11 @@ DrmGpu *DrmBackend::addGpu(const QString &fileName)
         }
         Q_EMIT aboutToChangeEglDisplay();
         sortGpus();
-        qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+        if (primaryGpu()) {
+            qCCritical(KWIN_DRM, "Switching primary GPU to %s", qPrintable(primaryGpu()->drmDevice()->path()));
+        } else {
+            qCCritical(KWIN_DRM, "All GPUs have been removed!");
+        }
         Q_EMIT eglDisplayChanged();
     });
     if (m_renderBackend) {
