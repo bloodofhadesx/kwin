@@ -126,12 +126,14 @@ DrmGpu::DrmGpu(DrmBackend *backend, int fd, std::unique_ptr<DrmDevice> &&device)
     // select software rendering and only later switch to the render node
     GpuManager::self()->scanForRenderDevices();
     // fallback for software rendering
-    auto fallbackDevice = RenderDevice::open(m_drmDevice->path(), m_fd);
-    m_kmsRenderDevice = fallbackDevice.get();
-    if (!fallbackDevice) {
-        qCWarning(KWIN_DRM, "Opening render device for %s failed", qPrintable(m_drmDevice->path()));
-    } else {
-        GpuManager::self()->addDevice(std::move(fallbackDevice));
+    if (!GpuManager::self()->softwareDevice()) {
+        auto fallbackDevice = RenderDevice::open(m_drmDevice->path(), m_fd);
+        m_kmsRenderDevice = fallbackDevice.get();
+        if (!fallbackDevice) {
+            qCWarning(KWIN_DRM, "Opening render device for %s failed", qPrintable(m_drmDevice->path()));
+        } else {
+            GpuManager::self()->addDevice(std::move(fallbackDevice));
+        }
     }
     updateRenderDevice();
     connect(GpuManager::self(), &GpuManager::renderDeviceAdded, this, &DrmGpu::updateRenderDevice);
@@ -1075,6 +1077,8 @@ void DrmGpu::updateRenderDevice()
 {
     if (RenderDevice *renderDev = GpuManager::self()->compatibleRenderDevice(m_drmDevice.get())) {
         setRenderDevice(renderDev);
+    } else if (GpuManager::self()->softwareDevice()) {
+        setRenderDevice(&*GpuManager::self()->softwareDevice());
     } else {
         qCWarning(KWIN_DRM, "Couldn't find any render device for %s", qPrintable(m_drmDevice->path()));
         setRenderDevice(nullptr);

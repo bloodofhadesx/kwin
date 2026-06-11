@@ -84,16 +84,18 @@ RenderDevice::RenderDevice(std::unique_ptr<DrmDevice> &&device, std::unique_ptr<
     : m_device(std::move(device))
     , m_display(std::move(display))
     , m_vulkanInstance(createVulkanInstance(m_vulkanContext))
+    , m_deviceId(m_device->deviceId())
     , m_path(m_device->path())
 {
     createVulkanDevice();
     m_allImportableFormats = getImportFormats(m_display.get(), m_vulkanDevice.get());
 }
 
-RenderDevice::RenderDevice(std::unique_ptr<UDmabufAllocator> &&allocator, std::unique_ptr<EglDisplay> &&display)
+RenderDevice::RenderDevice(std::unique_ptr<UDmabufAllocator> &&allocator, std::unique_ptr<EglDisplay> &&display, dev_t devId)
     : m_udmabufAllocator(std::move(allocator))
     , m_display(std::move(display))
     , m_vulkanInstance(createVulkanInstance(m_vulkanContext))
+    , m_deviceId(devId)
     , m_path(QStringLiteral("/dev/udmabuf"))
 {
 }
@@ -318,7 +320,7 @@ std::unique_ptr<RenderDevice> RenderDevice::open(const QString &path, int authen
     return std::make_unique<RenderDevice>(std::move(drmDevice), std::move(eglDisplay));
 }
 
-std::unique_ptr<RenderDevice> RenderDevice::createSoftwareDevice()
+std::unique_ptr<RenderDevice> RenderDevice::createSoftwareDevice(dev_t devId)
 {
     EGLint numDevices = 0;
     if (eglQueryDevicesEXT(0, nullptr, &numDevices) != EGL_TRUE) {
@@ -340,12 +342,17 @@ std::unique_ptr<RenderDevice> RenderDevice::createSoftwareDevice()
     if (!eglDisplay) {
         return nullptr;
     }
-    return std::make_unique<RenderDevice>(std::make_unique<UDmabufAllocator>(), std::move(eglDisplay));
+    return std::make_unique<RenderDevice>(std::make_unique<UDmabufAllocator>(), std::move(eglDisplay), devId);
 }
 
 bool RenderDevice::isSoftwareDevice() const
 {
     return m_display->isSoftwareRenderer() && (!m_vulkanDevice || m_vulkanDevice->isSoftwareRenderer());
+}
+
+dev_t RenderDevice::deviceId() const
+{
+    return m_deviceId;
 }
 
 }

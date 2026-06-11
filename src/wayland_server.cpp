@@ -814,16 +814,11 @@ ExtBackgroundEffectManagerV1 *WaylandServer::backgroundEffectManager() const
 
 void WaylandServer::setRenderBackend(RenderBackend *backend, const QList<LinuxDmaBufV1Feedback::Tranche> &tranches)
 {
-    if (backend->renderDevice()->drmDevice()) {
-        if (!m_linuxDmabuf) {
-            m_linuxDmabuf = new LinuxDmaBufV1ClientBufferIntegration(m_display);
-        }
-        m_linuxDmabuf->setRenderBackend(backend);
-        m_linuxDmabuf->setSupportedFormatsWithModifiers(tranches);
-    } else if (m_linuxDmabuf) {
-        m_linuxDmabuf->remove();
-        m_linuxDmabuf = nullptr;
+    if (!m_linuxDmabuf) {
+        m_linuxDmabuf = new LinuxDmaBufV1ClientBufferIntegration(m_display);
     }
+    m_linuxDmabuf->setRenderBackend(backend);
+    m_linuxDmabuf->setSupportedFormatsWithModifiers(tranches);
 
     if (backend->renderDevice()->drmDevice()
         && backend->renderDevice()->drmDevice()->supportsSyncObjTimelines()) {

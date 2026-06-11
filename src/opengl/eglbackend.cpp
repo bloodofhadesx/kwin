@@ -103,12 +103,6 @@ void EglBackend::setRenderDevice(RenderDevice *device)
 
 void EglBackend::initWayland()
 {
-    if (!m_renderDevice->drmDevice()) {
-        m_tranches.clear();
-        waylandServer()->setRenderBackend(this, m_tranches);
-        return;
-    }
-
     auto filterFormats = [this](std::optional<uint32_t> bpc, bool withExternalOnlyYUV) {
         FormatModifierMap set;
         const auto &allFormats = m_renderDevice->eglDisplay()->allSupportedDrmFormats();
@@ -160,17 +154,17 @@ void EglBackend::initWayland()
     };
 
     m_tranches.append({
-        .device = m_renderDevice->drmDevice()->deviceId(),
+        .device = m_renderDevice->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = filterFormats(10, false),
     });
     m_tranches.append({
-        .device = m_renderDevice->drmDevice()->deviceId(),
+        .device = m_renderDevice->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = filterFormats(8, false),
     });
     m_tranches.append({
-        .device = m_renderDevice->drmDevice()->deviceId(),
+        .device = m_renderDevice->deviceId(),
         .flags = LinuxDmaBufV1Feedback::TrancheFlag::Sampling,
         .formatTable = includeShaderConversions(filterFormats(std::nullopt, true)),
     });

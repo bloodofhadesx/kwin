@@ -55,7 +55,7 @@ GpuManager::GpuManager()
     , m_udevNotifier(std::make_unique<QSocketNotifier>(m_udevMonitor->fd(), QSocketNotifier::Read))
 {
     if (m_udmabuf.isValid()) {
-        if (auto device = RenderDevice::createSoftwareDevice()) {
+        if (auto device = RenderDevice::createSoftwareDevice(*m_udmabufDevId)) {
             m_softwareDevice = *device.get();
             addDevice(std::move(device));
         }

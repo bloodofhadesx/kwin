@@ -33,7 +33,7 @@ class KWIN_EXPORT RenderDevice : public QObject
 
 public:
     explicit RenderDevice(std::unique_ptr<DrmDevice> &&device, std::unique_ptr<EglDisplay> &&display);
-    explicit RenderDevice(std::unique_ptr<UDmabufAllocator> &&allocator, std::unique_ptr<EglDisplay> &&display);
+    explicit RenderDevice(std::unique_ptr<UDmabufAllocator> &&allocator, std::unique_ptr<EglDisplay> &&display, dev_t deviceId);
     ~RenderDevice();
 
     /**
@@ -73,12 +73,14 @@ public:
      */
     bool isSoftwareDevice() const;
 
+    dev_t deviceId() const;
+
     static std::unique_ptr<RenderDevice> open(const QString &path, int authenticatedFd = -1);
     /**
      * @returns a RenderDevice without a drm device, using udmabuf for allocations
      *          and a software renderer for OpenGL and Vulkan
      */
-    static std::unique_ptr<RenderDevice> createSoftwareDevice();
+    static std::unique_ptr<RenderDevice> createSoftwareDevice(dev_t devId);
 
 private:
     void handleVulkanDeviceLoss();
@@ -89,6 +91,7 @@ private:
     const std::unique_ptr<EglDisplay> m_display;
     const vk::raii::Context m_vulkanContext;
     const vk::raii::Instance m_vulkanInstance;
+    const dev_t m_deviceId;
     std::unique_ptr<VulkanDevice> m_vulkanDevice;
     FormatModifierMap m_allImportableFormats;
     std::weak_ptr<EglContext> m_eglContext;
