@@ -1,0 +1,63 @@
+name: Build kwin
+
+on:
+  push:
+    branches: [lindroid-screen-capture, lindroid-dmabuf]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: debian:trixie
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install base build tools
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq build-essential cmake ninja-build pkg-config \
+            extra-cmake-modules python3 2>&1 | tail -5
+
+      - name: Install KWin build dependencies
+        run: |
+          apt-get install -y -qq \
+            libdrm-dev libepoxy-dev libxcb*-dev libwayland-dev \
+            libinput-dev libxkbcommon-dev libxkbcommon-x11-dev \
+            libfontconfig-dev libfreetype-dev libcap-dev \
+            libpipewire-0.3-dev \
+            libegl1-mesa-dev libgl1-mesa-dev \
+            qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev \
+            qt6-wayland-dev qt6-declarative-dev \
+            libqt6svg6-dev \
+            libkf6windowsystem-dev libkf6config-dev \
+            libkf6coreaddons-dev libkf6i18n-dev libkf6notifications-dev \
+            libkf6widgetsaddons-dev libkf6xmlgui-dev libkf6crash-dev \
+            libkf6globalaccel-dev libkf6dbusaddons-dev \
+            libkf6idletime-dev libglu1-mesa-dev \
+            libglib2.0-dev libgbm-dev 2>&1 | tail -10
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_TESTING=OFF \
+            -DWITH_X11=OFF \
+            -DWITH_WAYLAND=ON \
+            -DKCMS=OFF \
+            -DKWIN_BUILD_SCREENCAST=ON \
+            2>&1 | tail -30
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) 2>&1 | tail -30
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kwin-build
+          path: build/

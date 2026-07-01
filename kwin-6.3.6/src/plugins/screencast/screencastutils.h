@@ -45,8 +45,15 @@ static void doGrabTexture(GLTexture *texture, QImage *target)
         return;
     }
 
-    const auto context = EglContext::currentContext();
+    const auto context = OpenGlContext::currentContext();
     const QSize size = texture->size();
+    /* glReadPixels/glGetTexImage reads from texture byte 0.
+     * For EGLImageTexture (Android convention, contentTransform=FlipY): byte 0 = top of image
+     * For standard GL textures (contentTransform=Normal): byte 0 = bottom of image (GL convention)
+     *
+     * When byte 0 = top → output is top-first (correct for QImage) → no flip needed
+     * When byte 0 = bottom → output is bottom-first → mirrorVertically flips it
+     */
     const bool invertNeeded = texture->contentTransform() != OutputTransform::FlipY;
     const bool invertNeededAndSupported = invertNeeded && context->supportsPackInvert();
     GLboolean prev;
@@ -103,9 +110,21 @@ static void grabTexture(GLTexture *texture, QImage *target)
     }
 }
 
-static inline Region scaleRegion(const Region &region, qreal scale, const Rect &bounds)
+static inline QRegion scaleRegion(const QRegion &_region, qreal scale)
 {
-    return region.scaledAndRoundedOut(scale) & bounds;
+    if (scale == 1.) {
+        return _region;
+    }
+
+    QRegion region;
+    for (auto it = _region.begin(), itEnd = _region.end(); it != itEnd; ++it) {
+        region += QRect(std::floor(it->x() * scale),
+                        std::floor(it->y() * scale),
+                        std::ceil(it->width() * scale),
+                        std::ceil(it->height() * scale));
+    }
+
+    return region;
 }
 
 } // namespace KWin
